@@ -1,0 +1,1 @@
+gcc *.c -Ilib\sdl_2.0.3_x86_64\include\sdl2 -Llib\sdl_2.0.3_x86_64\lib -lmingw32 -lSDL2main -lSDL2 -lopengl32 -o main -std=c11
