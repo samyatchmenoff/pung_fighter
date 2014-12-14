@@ -1,55 +1,10 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include <time.h>
-#include <sys/time.h>
 #include <unistd.h>
-
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-const int REFRESH_RATE = 60;
-
-struct Player {
-	int health;
-	char* character;
-	struct MoveFrame* moves[];
-};
-
-struct Box {
-	double x1;
-	double y1;
-	double x2;
-	double y2;
-};
-
-struct MoveFrame {
-	int id;
-	int damage;
-	int priority;
-	char* command;
-	struct Box hitbox;
-	struct Box movebox;
-	int* overrides;
-};
-
-const struct Player BALROG = {
-	.health = 15000,
-	.character = "Balrog",
-	.moves = {
-		{
-			.id = 1,
-			.damage = 1200,
-			.priority = 100,
-			.command = "HP",
-			.hitbox = {
-			},
-			.movebox = {
-			},
-			.overrides = {
-			}
-		}
-	}
-};
+#include "config.h"
+#include "moves.h"
+#include "balrog.h"
 
 int main(int argc, char* args[]) {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -116,26 +71,24 @@ int main(int argc, char* args[]) {
 	int skip = closest.refresh_rate / REFRESH_RATE;
 	const int FRAME_SKIP = skip > 0 ? skip : 1;
 	printf("%d\n", FRAME_SKIP);
-	int frameRotation = 0;
+	int currentFrame = 0;
 
-	char* player1Inputs[REFRESH_RATE * 2];
-	MoveFrame* player1State;
-	char* player2Inputs[REFRESH_RATE * 2];
-	MoveFrame* player2State;
+	struct Character p1 = balrog;
+	struct Character p2 = balrog;
 
 	while (!quit) {
-		frameRotation += 1;
+		currentFrame += 1;
 
-		if (frameRotation % FRAME_SKIP != 0) {
+		if (currentFrame % FRAME_SKIP != 0) {
 			continue;
 		}
 
-		frameRotation = 0;
+		currentFrame = 0;
 
 		while (SDL_PollEvent(&keyEvent) != 0) {
 			if (keyEvent.type == SDL_QUIT) {
 				quit = 1;
-			} else if (keyEvent.type == SDL_KEYUP) {
+			} else if (keyEvent.type == SDL_KEYDOWN && keyEvent.key.repeat == 0) {
 				switch (keyEvent.key.keysym.sym) {
 					case SDLK_q:
 						quit = 1;
@@ -143,6 +96,37 @@ int main(int argc, char* args[]) {
 					case SDLK_p:
 						pause = !pause;
 						break;
+					case SDLK_UP:
+						characterInputUnshift(p1.inputs, UP);
+						break;
+					case SDLK_RIGHT:
+						characterInputUnshift(p1.inputs, RIGHT);
+						break;
+					case SDLK_DOWN:
+						characterInputUnshift(p1.inputs, DOWN);
+						break;
+					case SDLK_LEFT:
+						characterInputUnshift(p1.inputs, LEFT);
+						break;
+					case SDLK_4:
+						characterInputUnshift(p1.inputs, LP);
+						break;
+					case SDLK_5:
+						characterInputUnshift(p1.inputs, MP);
+						break;
+					case SDLK_6:
+						characterInputUnshift(p1.inputs, HP);
+						break;
+					case SDLK_1:
+						characterInputUnshift(p1.inputs, LK);
+						break;
+					case SDLK_2:
+						characterInputUnshift(p1.inputs, MK);
+						break;
+					case SDLK_3:
+						characterInputUnshift(p1.inputs, HK);
+						break;
+
 				}
 			}
 		}
@@ -151,22 +135,11 @@ int main(int argc, char* args[]) {
 			continue;
 		}
 
-		const uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
-
-		if (currentKeyStates[SDL_SCANCODE_UP]) {
-		}
-		if (currentKeyStates[SDL_SCANCODE_DOWN]) {
-		}
-		if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
-		}
-		if (currentKeyStates[SDL_SCANCODE_LEFT]) {
-		}
-
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glColor3f(1.0, 0.0, 0.0);
-		glRectf(player1.x, player1.y, player1.x + player1.w, player1.y + player1.h);
+		//glRectf(player1.x, player1.y, player1.x + player1.w, player1.y + player1.h);
 
 		SDL_GL_SwapWindow(window);
 	}
