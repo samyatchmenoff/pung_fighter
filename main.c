@@ -102,6 +102,7 @@ int main(int argc, char* args[]) {
 					case SDLK_p:
 						pause = !pause;
 						break;
+					//TODO repeat event should work for directions
 					case SDLK_UP:
 						addInput(p1.inputs, UP);
 						neutralCounter = 0;
@@ -166,6 +167,9 @@ int main(int argc, char* args[]) {
 		struct MoveFrame p1State = p1.animation[p1AnimationCounter];
 		int cancellable = isCancellable(p1Move.id, &p1State);
 
+		p1.x += p1State.x;
+		p1.y += p1State.y;
+
 		for (int i = 0; i < OVERRIDES_LENGTH; i++) {
 			printf("%d, ", p1State.overrideMoveIds[i]);
 		}
@@ -206,10 +210,10 @@ int main(int argc, char* args[]) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glColor3f(1.0, 0.0, 0.0);
-		glRectf(p1State.attbox.x1, p1State.attbox.y1, p1State.attbox.x2, p1State.attbox.y2);
+		glRectf(p1.x + p1State.attbox.x1, p1.y + p1State.attbox.y1, p1.x + p1State.attbox.x2, p1.y + p1State.attbox.y2);
 
 		glColor3f(0.0, 0.0, 1.0);
-		glRectf(p1State.hitbox.x1, p1State.hitbox.y1, p1State.hitbox.x2, p1State.hitbox.y2);
+		glRectf(p1.x + p1State.hitbox.x1, p1.y + p1State.hitbox.y1, p1.x + p1State.hitbox.x2, p1.y + p1State.hitbox.y2);
 
 		SDL_GL_SwapWindow(window);
 

@@ -17,7 +17,26 @@ const struct Character balrog = {
 					"blahblah",
 					{0, 0, 0, 0},
 					{0, 0, 50, 100},
-					{1, 2, 20}
+					{1, 2, 10, 20, 30}
+				}
+			}
+		},
+		{
+			.id = 10,
+			.commands = {
+				{RIGHT}
+			},
+			.animation = {
+				{
+					10,
+					0,
+					0,
+					10,
+					0,
+					"blahblah",
+					{0, 0, 0, 0},
+					{0, 0, 50, 100},
+					{1, 2, 10, 20, 30}
 				}
 			}
 		},
@@ -235,6 +254,7 @@ const struct Character balrog = {
 				}
 			}
 		},
+		//test move
 		{
 			.id = 20,
 			.commands = {
@@ -244,6 +264,26 @@ const struct Character balrog = {
 			.animation = {
 				{
 					20,
+					401,
+					100,
+					0,
+					0,
+					"blahblah",
+					{100, 100, 100, 100},
+					{0, 0, 50, 100},
+					{}
+				}
+			}
+		},
+		//test move
+		{
+			.id = 30,
+			.commands = {
+				{LP, MP, LP}
+			},
+			.animation = {
+				{
+					30,
 					401,
 					100,
 					0,
