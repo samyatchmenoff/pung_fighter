@@ -1,7 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include <unistd.h>
 #include "config.h"
 #include "moves.h"
 #include "balrog.h"
@@ -70,11 +71,16 @@ int main(int argc, char* args[]) {
 
 	int skip = closest.refresh_rate / REFRESH_RATE;
 	const int FRAME_SKIP = skip > 0 ? skip : 1;
-	printf("%d\n", FRAME_SKIP);
 	int currentFrame = 0;
 
 	struct Character p1 = balrog;
 	struct Character p2 = balrog;
+	int p1AnimationCounter = 0;
+	int p2AnimationCounter = 0;
+	int neutralCounter = 1;
+
+	//initialize to neutral
+	p1.animation = copyMove(p1.moves[0].animation);
 
 	while (!quit) {
 		currentFrame += 1;
@@ -97,51 +103,117 @@ int main(int argc, char* args[]) {
 						pause = !pause;
 						break;
 					case SDLK_UP:
-						characterInputUnshift(p1.inputs, UP);
+						addInput(p1.inputs, UP);
+						neutralCounter = 0;
 						break;
 					case SDLK_RIGHT:
-						characterInputUnshift(p1.inputs, RIGHT);
+						addInput(p1.inputs, RIGHT);
+						neutralCounter = 0;
 						break;
 					case SDLK_DOWN:
-						characterInputUnshift(p1.inputs, DOWN);
+						addInput(p1.inputs, DOWN);
+						neutralCounter = 0;
 						break;
 					case SDLK_LEFT:
-						characterInputUnshift(p1.inputs, LEFT);
+						addInput(p1.inputs, LEFT);
+						neutralCounter = 0;
 						break;
 					case SDLK_4:
-						characterInputUnshift(p1.inputs, LP);
+						addInput(p1.inputs, LP);
+						neutralCounter = 0;
 						break;
 					case SDLK_5:
-						characterInputUnshift(p1.inputs, MP);
+						addInput(p1.inputs, MP);
+						neutralCounter = 0;
 						break;
 					case SDLK_6:
-						characterInputUnshift(p1.inputs, HP);
+						addInput(p1.inputs, HP);
+						neutralCounter = 0;
 						break;
 					case SDLK_1:
-						characterInputUnshift(p1.inputs, LK);
+						addInput(p1.inputs, LK);
+						neutralCounter = 0;
 						break;
 					case SDLK_2:
-						characterInputUnshift(p1.inputs, MK);
+						addInput(p1.inputs, MK);
+						neutralCounter = 0;
 						break;
 					case SDLK_3:
-						characterInputUnshift(p1.inputs, HK);
+						addInput(p1.inputs, HK);
+						neutralCounter = 0;
 						break;
-
 				}
 			}
+		}
+
+		//clear inputs if we've been neutral too long
+		//dont want to keep finding old inputs
+		if (neutralCounter > NEUTRAL_LIMIT) {
+			clearInput(p1.inputs);
+			neutralCounter = 1;
+		} else if (neutralCounter > 0) {
+			addInput(p1.inputs, NEUTRAL);
+			neutralCounter += 1;
+		} else {
+			neutralCounter = 1;
 		}
 
 		if (pause) {
 			continue;
 		}
 
+		struct Move p1Move = *findMove(p1.inputs, p1.moves);
+		struct MoveFrame p1State = p1.animation[p1AnimationCounter];
+		int cancellable = isCancellable(p1Move.id, &p1State);
+
+		for (int i = 0; i < OVERRIDES_LENGTH; i++) {
+			printf("%d, ", p1State.overrideMoveIds[i]);
+		}
+
+		printf("\n");
+
+		for (int i = 0; i < INPUTS_LENGTH; i++) {
+			printf("%d, ", p1.inputs[i]);
+		}
+
+		printf("\n");
+		printf("lol %d %d\n", p1AnimationCounter, p1State.moveId);
+
+		if (cancellable) {
+			printf("omg\n");
+			free(p1.animation);
+			p1.animation = copyMove(p1Move.animation);
+			p1AnimationCounter = 0;
+			p1State = p1.animation[p1AnimationCounter];
+		} else {
+			printf("hrm\n");
+			p1AnimationCounter += 1;
+			p1State = p1.animation[p1AnimationCounter];
+
+			//if our animation is over, revert back to neutral
+			if (p1State.moveId == 0) {
+				free(p1.animation);
+				p1.animation = copyMove(p1.moves[0].animation);
+				p1AnimationCounter = 0;
+				p1State = p1.animation[p1AnimationCounter];
+			}
+		}
+
+		printf("lol %d %d\n", p1AnimationCounter, p1State.moveId);
+		printf("\n\n");
+
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glColor3f(1.0, 0.0, 0.0);
-		//glRectf(player1.x, player1.y, player1.x + player1.w, player1.y + player1.h);
+		glRectf(p1State.attbox.x1, p1State.attbox.y1, p1State.attbox.x2, p1State.attbox.y2);
+
+		glColor3f(0.0, 0.0, 1.0);
+		glRectf(p1State.hitbox.x1, p1State.hitbox.y1, p1State.hitbox.x2, p1State.hitbox.y2);
 
 		SDL_GL_SwapWindow(window);
+
+		sleep(1);
 	}
 
 	SDL_GL_DeleteContext(glcontext);

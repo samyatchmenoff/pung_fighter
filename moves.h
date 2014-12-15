@@ -1,4 +1,4 @@
-enum Inputs {UP, RIGHT, DOWN, LEFT, LP, MP, HP, LK, MK, HK, START, SELECT};
+enum Inputs {NEUTRAL, UP, RIGHT, DOWN, LEFT, LP, MP, HP, LK, MK, HK, START, SELECT};
 
 struct Box {
 	double x1;
@@ -7,20 +7,22 @@ struct Box {
 	double y2;
 };
 
-struct Move {
-	int id;
-	enum Inputs* command;
-};
-
 struct MoveFrame {
+	int moveId;
 	int damage;
 	int priority;
 	int x;
 	int y;
 	char* sprite;
+	struct Box attbox;
 	struct Box hitbox;
-	struct Box movebox;
-	enum Inputs* overrides;
+	int overrideMoveIds[OVERRIDES_LENGTH];
+};
+
+struct Move {
+	int id;
+	enum Inputs commands[COMMAND_VARIATION_LENGTH][COMMAND_LENGTH];
+	struct MoveFrame animation[ANIMATION_LENGTH];
 };
 
 struct Character {
@@ -28,9 +30,13 @@ struct Character {
 	char* name;
 	int x;
 	int y;
-	struct Move* moves;
+	struct Move moves[MOVES_LENGTH];
 	struct MoveFrame* animation;
-	enum Inputs* inputs;
+	enum Inputs inputs[INPUTS_LENGTH];
 };
 
-void characterInputUnshift(enum Inputs* inputs, enum Inputs input);
+void addInput(enum Inputs* inputs, enum Inputs input);
+struct Move* findMove(enum Inputs* inputs, struct Move* moves);
+int isCancellable(int moveId, struct MoveFrame* frame);
+void clearInput(enum Inputs* inputs);
+struct MoveFrame* copyMove(struct MoveFrame* animation);
